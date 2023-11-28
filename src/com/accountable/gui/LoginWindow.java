@@ -55,16 +55,26 @@ public class LoginWindow extends JFrame {
     }
 
     private void login(ActionEvent e) {
-        // Login logic remains the same
-        String username = usernameField.getText();
-        String password = new String(passwordField.getPassword());
+        try {
+            String username = usernameField.getText();
+            String password = new String(passwordField.getPassword());
 
-        if (Authentication.authenticate(username, password)) {
-            dispose();
-            MainWindow mainWindow = new MainWindow(username);
-            mainWindow.setVisible(true);
-        } else {
-            JOptionPane.showMessageDialog(this, "Invalid username or password.", "Login Failed", JOptionPane.ERROR_MESSAGE);
+            if (Authentication.authenticate(username, password)) {
+                dispose();
+                SwingUtilities.invokeLater(() -> {
+                    try {
+                        MainWindow mainWindow = new MainWindow(username);
+                        mainWindow.setVisible(true);
+                    } catch (Exception ex) {
+                        ex.printStackTrace(); // Log the exception
+                    }
+                });
+            } else {
+                JOptionPane.showMessageDialog(this, "Invalid username or password.", "Login Failed", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace(); // Log any other exception that might occur
+            JOptionPane.showMessageDialog(this, "An error occurred while trying to log in.", "Login Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 

@@ -78,20 +78,33 @@ public class IncomePanel extends JPanel {
 
         // Initial display
         displayIncomeForMonth(currentMonth);
+
+        // Inside the constructor or a method where you set up the button
+        updateIncomeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                updateIncome();
+            }
+        });
+
     }
 
     private void updateIncome() {
-        String income = incomeAmountField.getText();
-        monthlyIncomes.put(currentMonth, income);
-        saveMonthlyIncomes();
-        displayIncomeForMonth(currentMonth);
-    }
+        String incomeString = incomeAmountField.getText();
+        try {
+            double income = Double.parseDouble(incomeString);
+            monthlyIncomes.put(currentMonth, incomeString);
+            saveMonthlyIncomes();
+            displayIncomeForMonth(currentMonth);
 
-    private void changeMonth(int monthsToAdd) {
-        currentMonth = currentMonth.plusMonths(monthsToAdd);
-        displayIncomeForMonth(currentMonth);
+            if (budgetPanel != null) {
+                budgetPanel.setPredictedIncome(income);
+                budgetPanel.recalculateAndDisplayAllocation(); // Ensure the budget panel updates
+            }
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Please enter a valid income amount.", "Invalid Input", JOptionPane.ERROR_MESSAGE);
+        }
     }
-
     private void displayIncomeForMonth(YearMonth month) {
         String income = monthlyIncomes.getOrDefault(month, "0");
         incomeAmountField.setText(income);
@@ -99,16 +112,18 @@ public class IncomePanel extends JPanel {
         incomeDateDisplay.setText(month.format(DateTimeFormatter.ofPattern("MMMM yyyy")));
     }
 
-    private void saveMonthlyIncomes() {
+
+    public void saveMonthlyIncomes() {
         try (BufferedWriter writer = Files.newBufferedWriter(incomeFilePath)) {
             for (Map.Entry<YearMonth, String> entry : monthlyIncomes.entrySet()) {
-                writer.write(entry.getKey() + "=" + entry.getValue());
+                writer.write(entry.getKey().toString() + "=" + entry.getValue());
                 writer.newLine();
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
 
     private void loadMonthlyIncomes() {
         if (!Files.exists(incomeFilePath)) return;
@@ -126,6 +141,12 @@ public class IncomePanel extends JPanel {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+
+    private void changeMonth(int monthsToAdd) {
+        currentMonth = currentMonth.plusMonths(monthsToAdd);
+        displayIncomeForMonth(currentMonth);
     }
 
     // Utility method to style buttons
@@ -173,7 +194,6 @@ public class IncomePanel extends JPanel {
     public double getPredictedIncome() {
         return predictedIncome;
     }
-
 
     // Main method for testing
     public static void main(String[] args) {
